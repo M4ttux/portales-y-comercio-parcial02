@@ -12,6 +12,9 @@ class Talles extends Model
     use HasFactory;
     protected $table = 'talles';
     protected $primaryKey = 'id';
+    protected $fillable = [
+        'talle',
+    ];
 
     // Relacion de muchos a muchos con la tabla articulos
     public function articulos()

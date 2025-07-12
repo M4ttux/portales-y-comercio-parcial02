@@ -8,27 +8,29 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+    // Listar todos los usuarios
     public function index()
     {
         $users = User::all();
         return view('admin.secciones.usuarios', compact('users'));
     }
 
+    // Crear un nuevo usuario
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+        $validated = $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|in:admin,user',
+            'role'     => 'required|in:admin,user',
         ]);
 
-        $user = new User();
-        $user->name = $request->input('name');
-        $user->email = $request->input('email');
-        $user->role = $request->input('role');
-        $user->password = Hash::make($request->input('password'));
-        $user->save();
+        User::create([
+            'name'     => $validated['name'],
+            'email'    => $validated['email'],
+            'role'     => $validated['role'],
+            'password' => Hash::make($validated['password']),
+        ]);
 
         return redirect()
             ->route('admin.section', ['seccion' => 'usuarios'])
@@ -36,25 +38,29 @@ class UserController extends Controller
             ->with('feedback.type', 'success');
     }
 
+    // Actualizar un usuario existente
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $id,
+        $validated = $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email,' . $id,
             'password' => 'nullable|string|min:6|confirmed',
-            'role' => 'required|in:admin,user',
+            'role'     => 'required|in:admin,user',
         ]);
 
         $user = User::findOrFail($id);
-        $user->name = $request->input('name');
-        $user->email = $request->input('email');
-        $user->role = $request->input('role');
 
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->input('password'));
+        $data = [
+            'name'  => $validated['name'],
+            'email' => $validated['email'],
+            'role'  => $validated['role'],
+        ];
+
+        if (!empty($validated['password'])) {
+            $data['password'] = Hash::make($validated['password']);
         }
 
-        $user->save();
+        $user->update($data);
 
         return redirect()
             ->route('admin.section', ['seccion' => 'usuarios'])
@@ -62,10 +68,10 @@ class UserController extends Controller
             ->with('feedback.type', 'success');
     }
 
+    // Eliminar un usuario
     public function destroy($id)
     {
-        $user = User::findOrFail($id);
-        $user->delete();
+        User::findOrFail($id)->delete();
 
         return redirect()
             ->route('admin.section', ['seccion' => 'usuarios'])

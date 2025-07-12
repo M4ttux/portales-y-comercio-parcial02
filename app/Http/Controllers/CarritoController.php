@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Articulo;
 use App\Models\Carrito;
-use App\Models\User;
 use App\Models\CarritoItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,18 +40,20 @@ class CarritoController extends Controller
         $user = Auth::user();
 
         $carrito = $user->carrito()->where('activo', true)->firstOrCreate([
-            'user_id' => $user->id
+            'user_id' => $user->id,
+            'activo' => true,
         ]);
 
         $item = $carrito->items()->where('articulo_id', $request->articulo_id)->first();
 
         if ($item) {
-            $item->cantidad += $request->cantidad;
-            $item->save();
+            $item->update([
+                'cantidad' => $item->cantidad + $request->cantidad,
+            ]);
         } else {
             $carrito->items()->create([
                 'articulo_id' => $request->articulo_id,
-                'cantidad' => $request->cantidad
+                'cantidad' => $request->cantidad,
             ]);
         }
 
@@ -62,7 +63,6 @@ class CarritoController extends Controller
             ->with('feedback.type', 'success');
     }
 
-
     // Actualizar cantidad de un ítem
     public function update(Request $request, $id)
     {
@@ -70,9 +70,9 @@ class CarritoController extends Controller
             'cantidad' => 'required|integer|min:1'
         ]);
 
-        $item = CarritoItem::findOrFail($id);
-        $item->cantidad = $request->cantidad;
-        $item->save();
+        CarritoItem::findOrFail($id)->update([
+            'cantidad' => $request->cantidad
+        ]);
 
         return redirect()
             ->route('carrito.index')
@@ -83,8 +83,7 @@ class CarritoController extends Controller
     // Eliminar un ítem del carrito
     public function destroy($id)
     {
-        $item = CarritoItem::findOrFail($id);
-        $item->delete();
+        CarritoItem::findOrFail($id)->delete();
 
         return redirect()
             ->route('carrito.index')

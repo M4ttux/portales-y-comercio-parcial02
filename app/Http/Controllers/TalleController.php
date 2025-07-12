@@ -8,17 +8,24 @@ use Illuminate\Database\QueryException;
 
 class TalleController extends Controller
 {
+    // Crear un nuevo talle
+    public function store(Request $request)
+    {
+        $request->validate([
+            'talle' => 'required|string|max:5',
+        ]);
 
-    public function store(Request $request) {
-        $input = $request->all();
-        $talle = new Talles();
-        $talle->talle = $input['talle'];
-        $talle->save();
+        Talles::create([
+            'talle' => $request->input('talle')
+        ]);
+
         return redirect()
             ->route('admin.section', ['seccion' => 'talles'])
             ->with('feedback.message', 'Talle creado correctamente')
             ->with('feedback.type', 'success');
     }
+
+    // Actualizar un talle
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -26,14 +33,17 @@ class TalleController extends Controller
         ]);
 
         $talle = Talles::findOrFail($id);
-        $talle->talle = $request->input('talle');
-        $talle->save();
+        $talle->update([
+            'talle' => $request->input('talle')
+        ]);
+
         return redirect()
             ->route('admin.section', ['seccion' => 'talles'])
             ->with('feedback.message', 'Talle actualizado correctamente')
             ->with('feedback.type', 'success');
     }
 
+    // Eliminar un talle
     public function destroy($id)
     {
         try {
@@ -45,16 +55,11 @@ class TalleController extends Controller
                 ->with('feedback.message', 'Talle eliminado correctamente')
                 ->with('feedback.type', 'success');
         } catch (QueryException $e) {
-            if ($e->getCode() === '23000') {
-                return redirect()
-                    ->route('admin.section', ['seccion' => 'talles'])
-                    ->with('feedback.message', 'No se puede eliminar este talle porque está en uso por uno o más artículos.')
-                    ->with('feedback.type', 'danger');
-            }
-
             return redirect()
                 ->route('admin.section', ['seccion' => 'talles'])
-                ->with('feedback.message', 'Error al intentar eliminar el talle.')
+                ->with('feedback.message', $e->getCode() === '23000'
+                    ? 'No se puede eliminar este talle porque está en uso por uno o más artículos.'
+                    : 'Error al intentar eliminar el talle.')
                 ->with('feedback.type', 'danger');
         }
     }

@@ -348,10 +348,6 @@ form {
     width: 100%;
 }
 
-.form-control {
-    border-radius: 12;
-}
-
 .form-control:focus {
     border-color: red;
     box-shadow: none;
@@ -395,6 +391,12 @@ footer {
 label {
     margin-right: 5px;
 }
+
+label.required::after {
+    content: " *";
+    color: red;
+}
+
 
 select,
 input {

@@ -12,55 +12,67 @@ use App\Mail\ResumenCompra;
 
 class CheckoutController extends Controller
 {
+    // Mostrar vista previa del resumen de compra
     public function index()
     {
         $user = Auth::user();
         $carrito = $user->carrito()->where('activo', true)->first();
 
-        if (!$carrito || $carrito->items->isEmpty()) {
-            return redirect()->route('carrito.index')->with('feedback.message', 'Tu carrito está vacío')->with('feedback.type', 'warning');
+        if (!$carrito || $carrito->items()->count() === 0) {
+            return redirect()
+                ->route('carrito.index')
+                ->with('feedback.message', 'Tu carrito está vacío')
+                ->with('feedback.type', 'warning');
         }
 
         $items = $carrito->items()->with('articulo')->get();
         $total = $items->sum(fn($item) => $item->articulo->precio * $item->cantidad);
 
         return view('checkout.index', compact('items', 'total'));
-    } 
+    }
 
+    // Procesar compra y registrar orden
     public function store()
     {
         $user = Auth::user();
         $carrito = $user->carrito()->where('activo', true)->first();
 
-        if (!$carrito || $carrito->items->isEmpty()) {
-            return redirect()->route('carrito.index')->with('feedback.message', 'Tu carrito está vacío')->with('feedback.type', 'warning');
+        if (!$carrito || $carrito->items()->count() === 0) {
+            return redirect()
+                ->route('carrito.index')
+                ->with('feedback.message', 'Tu carrito está vacío')
+                ->with('feedback.type', 'warning');
         }
 
         $items = $carrito->items()->with('articulo')->get();
         $total = $items->sum(fn($item) => $item->articulo->precio * $item->cantidad);
 
-        // Crear orden
+        // Crear la orden
         $orden = Orden::create([
             'user_id' => $user->id,
             'total' => $total,
             'estado' => 'confirmada',
-            'fecha_compra' => now()
+            'fecha_compra' => now(),
         ]);
 
-        // Crear items de orden
-        foreach ($items as $item) {
-            OrdenItem::create([
+        // Registrar cada item
+        $ordenItemsData = $items->map(function ($item) use ($orden) {
+            return [
                 'orden_id' => $orden->id,
                 'articulo_id' => $item->articulo->id,
                 'cantidad' => $item->cantidad,
                 'precio_unitario' => $item->articulo->precio,
-            ]);
-        }
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        })->toArray();
 
-        // Cargar relaciones necesarias para el resumen
+        OrdenItem::insert($ordenItemsData); // Inserción en lote = mejor rendimiento
+
+        // Cargar relaciones para el mail
         $orden->load('items.articulo', 'usuario');
 
-        // Enviar correo con resumen de compra
+        // Enviar resumen
         Mail::to($user->email)->send(new ResumenCompra($orden));
 
         // Vaciar carrito
@@ -69,6 +81,7 @@ class CheckoutController extends Controller
         return redirect()->route('checkout.confirmacion');
     }
 
+    // Vista de confirmación
     public function confirmacion()
     {
         return view('checkout.confirmacion');

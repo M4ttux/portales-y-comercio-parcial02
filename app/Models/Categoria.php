@@ -11,6 +11,9 @@ class Categoria extends Model
 {
     use HasFactory;
     protected $primaryKey = 'categoria_id';
+    protected $fillable = [
+        'categoria',
+    ];
 
     // Relacion de uno a muchos con la tabla articulos
     public function articulos() {

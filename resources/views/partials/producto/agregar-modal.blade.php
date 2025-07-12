@@ -13,43 +13,42 @@
                 <div class="modal-body">
                     <div class="row mb-3">
                         <div class="col">
-                            <label for="nombre" class="form-label">Nombre</label>
+                            <label for="nombre" class="form-label required">Nombre</label>
                             <input type="text" name="nombre" id="nombre" class="form-control" required>
                         </div>
                         <div class="col">
-                            <label for="precio" class="form-label">Precio</label>
+                            <label for="precio" class="form-label required">Precio</label>
                             <input type="number" name="precio" id="precio" class="form-control" step="0.01" required>
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="descripcion" class="form-label">Descripción</label>
-                        <textarea name="descripcion" id="descripcion" class="form-control" rows="3"></textarea>
+                        <textarea name="descripcion" id="descripcion" class="form-control" rows="1"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="talles" class="form-label required">Talles disponibles</label>
+                        <select name="talles[]" id="talles" class="form-select" multiple required>
+                            @foreach ($talles as $talle)
+                                <option value="{{ $talle->id }}">{{ $talle->talle }}</option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">Usá Ctrl (o Cmd en Mac) para seleccionar múltiples talles.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="categoria_id" class="form-label required">Categoría</label>
+                        <select name="categoria_id" id="categoria_id" class="form-select" required>
+                            <option value="" disabled selected>Seleccioná una categoría</option>
+                            @foreach ($categorias as $categoria)
+                                <option value="{{ $categoria->categoria_id }}">{{ $categoria->categoria }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div class="row mb-3">
                         <div class="col">
-                            <label for="talles">Talles disponibles:</label>
-                            <select name="talles[]" multiple class="form-select">
-                                @foreach ($talles as $talle)
-                                    <option value="{{ $talle->id }}">{{ $talle->talle }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col">
-                            <label for="categoria_id" class="form-label">Categoría</label>
-                            <select name="categoria_id" id="categoria_id" class="form-select" required>
-                                <option value="" disabled selected>Seleccioná una categoría</option>
-                                @foreach ($categorias as $categoria)
-                                    <option value="{{ $categoria->categoria_id }}">{{ $categoria->categoria }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label for="cantidad" class="form-label">Cantidad</label>
+                            <label for="cantidad" class="form-label required">Cantidad</label>
                             <input type="number" name="cantidad" id="cantidad" class="form-control" required>
                         </div>
                         <div class="col">
@@ -59,12 +58,12 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="imagen" class="form-label">Imagen</label>
+                        <label for="imagen" class="form-label required">Imagen</label>
                         <input type="file" name="imagen" id="imagen" class="form-control" required>
                     </div>
 
                     <div class="mb-3">
-                        <label for="imagen_hover" class="form-label">Imagen Hover</label>
+                        <label for="imagen_hover" class="form-label required">Imagen Hover</label>
                         <input type="file" name="imagen_hover" id="imagen_hover" class="form-control" required>
                     </div>
                 </div>

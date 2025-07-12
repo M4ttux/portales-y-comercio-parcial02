@@ -58,27 +58,28 @@ class ArticuloController extends Controller
     {
         $input = $request->all();
 
-        $articulo = new Articulo();
-        $articulo->nombre = $input['nombre'];
-        $articulo->descripcion = $input['descripcion'];
-        $articulo->precio = $input['precio'];
-        $articulo->fecha_creacion = $input['fecha_creacion'];
-        $articulo->categoria_id = $input['categoria_id'];
-        $articulo->cantidad = $input['cantidad'];
+        $data = [
+            'nombre' => $input['nombre'],
+            'descripcion' => $input['descripcion'],
+            'precio' => $input['precio'],
+            'fecha_creacion' => $input['fecha_creacion'],
+            'categoria_id' => $input['categoria_id'],
+            'cantidad' => $input['cantidad'],
+        ];
 
         if ($request->hasFile('imagen')) {
             $filename = time() . '_img.' . $request->imagen->extension();
-            $path = $request->file('imagen')->storeAs('images/productos', $filename, 'public');
-            $articulo->imagen = $filename;
+            $request->file('imagen')->storeAs('images/productos', $filename, 'public');
+            $data['imagen'] = $filename;
         }
 
         if ($request->hasFile('imagen_hover')) {
             $filenameHover = time() . '_hover.' . $request->imagen_hover->extension();
-            $path = $request->file('imagen_hover')->storeAs('images/productos', $filenameHover, 'public');
-            $articulo->imagen_hover = $filenameHover;
+            $request->file('imagen_hover')->storeAs('images/productos', $filenameHover, 'public');
+            $data['imagen_hover'] = $filenameHover;
         }
 
-        $articulo->save();
+        $articulo = Articulo::create($data);
 
         // Asignar talles múltiples
         if ($request->filled('talles')) {
@@ -89,6 +90,7 @@ class ArticuloController extends Controller
             ->with('feedback.message', 'Producto agregado correctamente.')
             ->with('feedback.type', 'success');
     }
+
 
 
     public function destroy($id)
@@ -122,14 +124,14 @@ class ArticuloController extends Controller
     {
         $articulo = Articulo::findOrFail($id);
 
-        $articulo->fill($request->only([
+        $data = $request->only([
             'nombre',
             'descripcion',
             'precio',
             'categoria_id',
             'cantidad',
             'fecha_creacion'
-        ]));
+        ]);
 
         if ($request->hasFile('imagen')) {
             if ($articulo->imagen) {
@@ -137,7 +139,7 @@ class ArticuloController extends Controller
             }
             $filename = time() . '_img.' . $request->imagen->extension();
             $request->file('imagen')->storeAs('images/productos', $filename, 'public');
-            $articulo->imagen = $filename;
+            $data['imagen'] = $filename;
         }
 
         if ($request->hasFile('imagen_hover')) {
@@ -146,10 +148,10 @@ class ArticuloController extends Controller
             }
             $filenameHover = time() . '_hover.' . $request->imagen_hover->extension();
             $request->file('imagen_hover')->storeAs('images/productos', $filenameHover, 'public');
-            $articulo->imagen_hover = $filenameHover;
+            $data['imagen_hover'] = $filenameHover;
         }
 
-        $articulo->update();
+        $articulo->update($data);
 
         // Actualizar talles asociados
         if ($request->filled('talles')) {
