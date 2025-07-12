@@ -19,14 +19,14 @@
                 <tbody>
                     @foreach ($talles as $talle)
                         <tr>
-                            <td>{{ $talle->talle_id }}</td>
+                            <td>{{ $talle->id }}</td>
                             <td>{{ $talle->talle }}</td>
                             <td>
                                 <div class="d-flex justify-content-center gap-3">
                                     <button class="btn btn-warning" data-bs-toggle="modal"
-                                        data-bs-target="#editarTalleModal{{ $talle->talle_id }}">Editar</button>
+                                        data-bs-target="#editarTalleModal{{ $talle->id }}">Editar</button>
                                     <button class="btn btn-danger" data-bs-toggle="modal"
-                                        data-bs-target="#eliminarTalleModal{{ $talle->talle_id }}">Eliminar</button>
+                                        data-bs-target="#eliminarTalleModal{{ $talle->id }}">Eliminar</button>
                                 </div>
                             </td>
                         </tr>
