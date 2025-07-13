@@ -4,6 +4,7 @@
 use App\Http\Controllers\HomeController;
 
 // Usamos el Facade de Laravel para las rutas
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 // Usamos el controlador de la vista CONTACTO
@@ -114,9 +115,19 @@ use App\Http\Controllers\CheckoutController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-    Route::get('/checkout/confirmacion', [CheckoutController::class, 'confirmacion'])->name('checkout.confirmacion');
+
+    // Callback de éxito (confirmación del pago)
+    Route::get('/checkout/success', [CheckoutController::class, 'confirmacion'])->name('checkout.success');
+
+    // Callbacks opcionales por si querés mostrar mensajes
+    Route::get('/checkout/failure', fn() => redirect()->route('checkout.index')->with('feedback.message', 'Pago fallido')->with('feedback.type', 'danger'))->name('checkout.failure');
+    Route::get('/checkout/pending', fn() => redirect()->route('checkout.index')->with('feedback.message', 'Pago pendiente')->with('feedback.type', 'warning'))->name('checkout.pending');
 });
+
+use App\Http\Controllers\MercadoPagoController;
+
+Route::post('/mp/confirmacion-pago', [MercadoPagoController::class, 'paymentConfirmation'])->name('mp.paymentConfirmation')->withoutMiddleware([VerifyCsrfToken::class]);
+
 
 
 use App\Http\Controllers\PerfilController;

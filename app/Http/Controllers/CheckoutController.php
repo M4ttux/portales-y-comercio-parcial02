@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ResumenCompra;
 
+// MercadoPago
+use MercadoPago\MercadoPagoConfig;
+use MercadoPago\Client\Preference\PreferenceClient;
+use MercadoPago\Exceptions\MPApiException;
+
 class CheckoutController extends Controller
 {
     // Mostrar vista previa del resumen de compra
@@ -28,7 +33,35 @@ class CheckoutController extends Controller
         $items = $carrito->items()->with('articulo')->get();
         $total = $items->sum(fn($item) => $item->articulo->precio * $item->cantidad);
 
-        return view('checkout.index', compact('items', 'total'));
+        // Crear preferencia de Mercado Pago
+        MercadoPagoConfig::setAccessToken(config('services.mercadopago.access_token'));
+        $client = new PreferenceClient();
+
+        $preference_data = [
+            'items' => $items->map(function ($item) {
+                return [
+                    'title' => $item->articulo->nombre,
+                    'quantity' => $item->cantidad,
+                    'unit_price' => (float) $item->articulo->precio,
+                    'currency_id' => 'ARS',
+                ];
+            })->toArray(),
+            'back_urls' => [
+                'success' => route('checkout.success'),
+                'failure' => route('checkout.failure'),
+                'pending' => route('checkout.pending'),
+            ],
+            /* 'auto_return' => 'approved', */
+        ];
+
+        try {
+            $preference = $client->create($preference_data);
+            return view('checkout.index', compact('items', 'total', 'preference'));
+        } catch (MPApiException $e) {
+            // Mostramos detalles reales del error
+            return back()->with('feedback.message', 'Error al generar el botón de pago: ' . json_encode($e->getApiResponse()->getContent()))
+                ->with('feedback.type', 'danger');
+        }
     }
 
     // Procesar compra y registrar orden
