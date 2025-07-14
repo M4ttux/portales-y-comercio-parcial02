@@ -12,6 +12,7 @@ class Orden extends Model
         'user_id',
         'total',
         'estado',
+        'payment_id',
         'fecha_compra',
     ];
 

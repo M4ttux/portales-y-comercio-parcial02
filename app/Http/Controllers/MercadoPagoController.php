@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use MercadoPago\MercadoPagoConfig;
 use MercadoPago\Client\Payment\PaymentClient;
+use MercadoPago\Client\Common\RequestOptions;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ResumenCompra;
 
 class MercadoPagoController extends Controller
 {
@@ -17,13 +20,21 @@ class MercadoPagoController extends Controller
         Log::info('📩 Webhook recibido', ['payload' => $request->all()]);
 
         $body = $request->all();
+        Log::info('📦 Tipo de evento recibido', [
+            'type' => $body['type'] ?? 'no definido',
+            'action' => $body['action'] ?? 'sin action',
+            'data_id' => $body['data']['id'] ?? $body['data_id'] ?? $body['id'] ?? 'no disponible',
+        ]);
 
         if (!isset($body['type']) || $body['type'] !== 'payment') {
             Log::warning('🔸 Webhook ignorado: tipo no es payment');
             return response()->json(['message' => 'Evento ignorado'], 200);
         }
 
-        $paymentId = $body['data']['id'] ?? null;
+        $paymentId = $body['data']['id']
+            ?? $body['data_id']
+            ?? $body['id']
+            ?? null;
 
         if (!$paymentId) {
             Log::error('❌ Webhook sin payment_id');
@@ -31,40 +42,48 @@ class MercadoPagoController extends Controller
         }
 
         try {
-            MercadoPagoConfig::setAccessToken(config('services.mercadopago.access_token'));
-            $client = new PaymentClient();
-
             if ($paymentId == '123456') {
                 Log::info("🔎 ID de prueba recibido. Webhook ignorado.");
                 return response()->json(['message' => 'ID de prueba ignorado'], 200);
             }
 
+            MercadoPagoConfig::setAccessToken(config('services.mercadopago.access_token'));
+            $client = new PaymentClient();
 
-            $payment = $client->get($paymentId);
+            $options = new RequestOptions();
+            $options->setCustomHeaders([
+                'x-expand-fields' => 'metadata'
+            ]);
+
+            $payment = $client->get($paymentId, $options);
+
             Log::info('💳 Pago recibido', [
                 'id' => $payment->id,
                 'status' => $payment->status,
                 'email' => $payment->payer->email
             ]);
 
-            if ($payment->status !== 'approved') {
-                return response()->json(['message' => 'Pago no aprobado'], 200);
+            if (Orden::where('payment_id', $payment->id)->exists()) {
+                Log::info("🔁 Orden ya existe para payment_id {$payment->id}");
+                return response()->json(['message' => 'Orden ya creada'], 200);
             }
 
-            $user = User::where('email', $payment->payer->email)->first();
+            $user = null;
+            $email = $payment->payer->email ?? null;
+
+            if ($email) {
+                $user = User::where('email', $email)->first();
+                Log::info("🔎 Usuario buscado por email: " . $email);
+            }
+
+            if (!$user && isset($payment->metadata->user_id)) {
+                $user = User::find($payment->metadata->user_id);
+                Log::info("🔎 Usuario buscado por metadata.user_id: " . $payment->metadata->user_id);
+            }
 
             if (!$user) {
-                Log::warning("⚠️ Usuario no encontrado para email " . $payment->payer->email);
+                Log::warning("⚠️ No se pudo asignar usuario (ni por email ni por metadata)");
                 return response()->json(['message' => 'Usuario no encontrado'], 200);
-            }
-
-            // Verificar orden duplicada
-            if (Orden::where('user_id', $user->id)
-                ->where('estado', 'confirmada')
-                ->whereDate('created_at', now())
-                ->exists()
-            ) {
-                return response()->json(['message' => 'Orden ya creada'], 200);
             }
 
             $carrito = $user->carrito()->where('activo', true)->first();
@@ -80,10 +99,12 @@ class MercadoPagoController extends Controller
             $orden = Orden::create([
                 'user_id' => $user->id,
                 'total' => $total,
-                'estado' => 'confirmada',
+                'estado' => $payment->status,
+                'payment_id' => $payment->id,
                 'fecha_compra' => now(),
             ]);
 
+            // Guardar los ítems SIEMPRE
             $ordenItems = $items->map(function ($item) use ($orden) {
                 return [
                     'orden_id' => $orden->id,
@@ -96,11 +117,17 @@ class MercadoPagoController extends Controller
             })->toArray();
 
             OrdenItem::insert($ordenItems);
-            $carrito->items()->delete();
 
-            Log::info("✅ Orden creada exitosamente desde webhook para user_id {$user->id}");
+            if ($payment->status === 'approved') {
+                $carrito->items()->delete();
+                $orden->load('items.articulo', 'usuario');
+                Mail::to($user->email)->send(new ResumenCompra($orden));
+                Log::info("✅ Orden aprobada creada, mail enviado y carrito vaciado para user_id {$user->id}");
+            } else {
+                Log::info("🕐 Orden creada en estado '{$payment->status}' para user_id {$user->id}");
+            }
 
-            return response()->json(['message' => 'Orden creada con éxito'], 200);
+            return response()->json(['message' => 'Orden registrada con estado ' . $payment->status], 200);
         } catch (\Exception $e) {
             Log::error("❌ Error en webhook: " . $e->getMessage());
             return response()->json(['message' => 'Error interno'], 500);

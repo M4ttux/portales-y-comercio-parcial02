@@ -1,9 +1,34 @@
 {{-- resources/views/emails/resumen.blade.php --}}
 @component('mail::message')
-# ¡Gracias por tu compra!
+# @switch($orden->estado)
+    @case('approved')
+        ¡Gracias por tu compra!
+        @break
+    @case('pending')
+        Tu pago está pendiente
+        @break
+    @case('in_process')
+        Estamos procesando tu pago
+        @break
+    @default
+        Estado de orden: {{ ucfirst($orden->estado) }}
+@endswitch
 
-Hola {{ $orden->usuario->name ?? 'Cliente' }},  
-tu compra fue confirmada exitosamente. A continuación, encontrarás los detalles:
+Hola {{ $orden->usuario->name ?? 'Cliente' }},
+
+@switch($orden->estado)
+    @case('approved')
+        Tu compra fue confirmada exitosamente. A continuación, encontrarás los detalles:
+        @break
+    @case('pending')
+        Recibimos tu orden, pero el pago está pendiente. Te notificaremos cuando se confirme.
+        @break
+    @case('in_process')
+        Estamos verificando tu pago. Te avisaremos una vez finalice el proceso.
+        @break
+    @default
+        Tu orden está en estado **{{ ucfirst($orden->estado) }}**.
+@endswitch
 
 ---
 
@@ -48,9 +73,12 @@ tu compra fue confirmada exitosamente. A continuación, encontrarás los detalle
 
 📅 <strong>Fecha de compra:</strong> {{ $orden->fecha_compra->format('d/m/Y H:i') }}
 
-@component('mail::button', ['url' => route('checkout.confirmacion')])
-Ver confirmación de compra
-@endcomponent
+@if (in_array($orden->estado, ['approved', 'pending', 'in_process']))
+    @component('mail::button', ['url' => route('checkout.confirmacion')])
+    Ver estado de mi compra
+    @endcomponent
+@endif
+
 
 Gracias por confiar en nosotros.  
 **{{ config('app.name') }}**

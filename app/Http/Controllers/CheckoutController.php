@@ -37,12 +37,6 @@ class CheckoutController extends Controller
         MercadoPagoConfig::setAccessToken(config('services.mercadopago.access_token'));
         $client = new PreferenceClient();
 
-        /* $backUrls = [
-            "success" => "http://localhost:8000/checkout/success",
-            "failure" => "http://localhost:8000/checkout/failure",
-            "pending" => "http://localhost:8000/checkout/pending",
-        ]; */
-
         $preference_data = [
             'items' => $items->map(function ($item) {
                 return [
@@ -52,6 +46,7 @@ class CheckoutController extends Controller
                     'currency_id' => 'ARS',
                 ];
             })->toArray(),
+
             "back_urls" => [
                 "success" => route("checkout.success"),
                 "failure" => route("checkout.failure"),
@@ -59,69 +54,26 @@ class CheckoutController extends Controller
             ],
 
             "auto_return" => "approved",
+
+            // ✅ Agregado: asociamos el user_id para identificarlo desde el webhook
+            "metadata" => [
+                "user_id" => $user->id
+            ]
         ];
 
         try {
-            
             $preference = $client->create($preference_data);
-
             $publicKey = config('services.mercadopago.public_key');
 
             return view('checkout.index', compact('items', 'total', 'preference', 'publicKey'));
         } catch (MPApiException $e) {
-            // Mostramos detalles reales del error
             return back()->with('feedback.message', 'Error al generar el botón de pago: ' . json_encode($e->getApiResponse()->getContent()))
                 ->with('feedback.type', 'danger');
         }
     }
 
-    // Procesar compra y registrar orden
     public function store()
     {
-        $user = Auth::user();
-        $carrito = $user->carrito()->where('activo', true)->first();
-
-        if (!$carrito || $carrito->items()->count() === 0) {
-            return redirect()
-                ->route('carrito.index')
-                ->with('feedback.message', 'Tu carrito está vacío')
-                ->with('feedback.type', 'warning');
-        }
-
-        $items = $carrito->items()->with('articulo')->get();
-        $total = $items->sum(fn($item) => $item->articulo->precio * $item->cantidad);
-
-        // Crear la orden
-        $orden = Orden::create([
-            'user_id' => $user->id,
-            'total' => $total,
-            'estado' => 'confirmada',
-            'fecha_compra' => now(),
-        ]);
-
-        // Registrar cada item
-        $ordenItemsData = $items->map(function ($item) use ($orden) {
-            return [
-                'orden_id' => $orden->id,
-                'articulo_id' => $item->articulo->id,
-                'cantidad' => $item->cantidad,
-                'precio_unitario' => $item->articulo->precio,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        })->toArray();
-
-        OrdenItem::insert($ordenItemsData); // Inserción en lote = mejor rendimiento
-
-        // Cargar relaciones para el mail
-        $orden->load('items.articulo', 'usuario');
-
-        // Enviar resumen
-        Mail::to($user->email)->send(new ResumenCompra($orden));
-
-        // Vaciar carrito
-        $carrito->items()->delete();
-
         return redirect()->route('checkout.confirmacion');
     }
 
