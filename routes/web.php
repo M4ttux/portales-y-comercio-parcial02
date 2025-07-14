@@ -19,20 +19,27 @@ use App\Http\Controllers\TalleController;
 use App\Http\Controllers\AuthController;
 // Usamos el controlador de la vista ADMIN
 use App\Http\Controllers\AdminController;
-//Usamos el controlador para la vista Alumno
+// Usamos el controlador para la vista Alumno
 use App\Http\Controllers\AlumnoController;
 // Usamos el middleware para verificar si el usuario es admin
 use App\Http\Middleware\IsAdmin;
-//Usamos el controlador para la las Noticias de river
+// Usamos el controlador para la las Noticias de river
 use App\Http\Controllers\NoticiaController;
 // Usamos el controlador para los usuarios
 use App\Http\Controllers\UserController;
+// Usamos el controlador para el carrito
+use App\Http\Controllers\CarritoController;
+// Usamos el controlador para el checkout
+use App\Http\Controllers\CheckoutController;
+// Usamos el controlador para MercadoPago
+use App\Http\Controllers\MercadoPagoController;
+// Usamos el controlador para el perfil
+use App\Http\Controllers\PerfilController;
 
 
 // LLamando al Metodo Index
 // vista home
 Route::get('/', [HomeController::class, 'index'])->name('home');
-
 
 // Listado de articulos
 Route::get('/articulos', [ArticuloController::class, 'index'])->name('articulos.index');
@@ -43,9 +50,9 @@ Route::get('/articulos/{id}', [ArticuloController::class, 'detalle'])
     ->name('articulos.detalle')
     ->whereNumber('id');
 
-
 //Ruta para vista de contacto
 Route::get('/contacto', [ContactoController::class, 'contacto'])->name('contacto');
+
 // Ruta para procesar el formulario de contacto
 Route::post('/contacto', [ContactoController::class, 'enviar'])->name('contacto.enviar');
 
@@ -54,15 +61,13 @@ Route::get('/alumnos', [AlumnoController::class, 'index'])->name('alumno.index')
 
 // Ruta para mostrar la vista de noticias
 Route::get('/noticias', [NoticiaController::class, 'index'])->name('noticias.index');
+
 // Listado de rutas protegidas para roles de admin
 // Middleware para verificar si el usuario es admin 
 // Middleware esta dentro de App-> Http-> Middleware->IsAdmin   
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
-
-
     Route::get('/admin/{seccion}', [AdminController::class, 'mostrarSeccion'])->name('admin.section');
-
 
     Route::delete('/articulos/{id}', [ArticuloController::class, 'destroy'])->name('articulos.destroy');
     Route::put('/articulos/{id}', [ArticuloController::class, 'update'])->name('articulos.update');
@@ -86,7 +91,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
 });
 
 // Rutas para la autenticación
-
 // Ruta para mostrar el formulario de inicio de sesión
 Route::get('/login', [AuthController::class, 'login'])->name('auth.login');
 
@@ -102,8 +106,7 @@ Route::post('/register', [AuthController::class, 'register'])->name('auth.regist
 // Ruta para Deslogearse
 Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
-use App\Http\Controllers\CarritoController;
-
+// Ruta para mostrar el carrito
 Route::middleware(['auth'])->group(function () {
     Route::get('/carrito', [CarritoController::class, 'index'])->name('carrito.index');
     Route::post('/carrito', [CarritoController::class, 'store'])->name('carrito.store');
@@ -111,25 +114,19 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/carrito/{id}', [CarritoController::class, 'destroy'])->name('carrito.destroy');
 });
 
-use App\Http\Controllers\CheckoutController;
+// Rutas de checkout (deben estar FUERA del middleware auth para los callbacks)
+Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
+Route::get('/checkout/failure', [CheckoutController::class, 'failure'])->name('checkout.failure');
+Route::get('/checkout/pending', [CheckoutController::class, 'pending'])->name('checkout.pending');
 
+// Rutas protegidas por autenticación
 Route::middleware(['auth'])->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-
-    // Callback de éxito (confirmación del pago)
-    Route::get('/checkout/success', [CheckoutController::class, 'confirmacion'])->name('checkout.success');
-
-    // Callbacks opcionales por si querés mostrar mensajes
-    Route::get('/checkout/failure', fn() => redirect()->route('checkout.index')->with('feedback.message', 'Pago fallido')->with('feedback.type', 'danger'))->name('checkout.failure');
-    Route::get('/checkout/pending', fn() => redirect()->route('checkout.index')->with('feedback.message', 'Pago pendiente')->with('feedback.type', 'warning'))->name('checkout.pending');
+    Route::get('/checkout/confirmacion', [CheckoutController::class, 'confirmacion'])->name('checkout.confirmacion');
 });
 
-use App\Http\Controllers\MercadoPagoController;
+// Webhook para notificaciones de MercadoPago (sin middleware de autenticación)
+Route::post('/mp/webhook', [MercadoPagoController::class, 'webhook'])->name('mp.webhook')->withoutMiddleware([VerifyCsrfToken::class]);
 
-Route::post('/mp/confirmacion-pago', [MercadoPagoController::class, 'paymentConfirmation'])->name('mp.paymentConfirmation')->withoutMiddleware([VerifyCsrfToken::class]);
-
-
-
-use App\Http\Controllers\PerfilController;
-
+// Ruta para mostrar el perfil del usuario
 Route::middleware(['auth'])->get('/perfil', [PerfilController::class, 'index'])->name('perfil.index');

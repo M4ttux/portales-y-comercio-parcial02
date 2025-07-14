@@ -45,23 +45,24 @@
             </a>
             <div id="checkout" class="flex-fill flex-md-grow-0"></div>
         </div>
-
-
-
         <div>
             <script src="https://sdk.mercadopago.com/js/v2"></script>
             <script>
-                const mp = new MercadoPago('APP_USR-c70f189e-20fa-4534-ba15-76856a1cc227', {
+                const mp = new MercadoPago('{{ $publicKey }}', {
                     locale: 'es-AR'
                 });
-                mp.bricks().create(
-                    "wallet",
-                    "checkout",
-                    {
+                mp.bricks().create("wallet", "checkout", {
                         initialization: {
-                            preferenceId: '{{ $preference->id }}'
+                            preferenceId: '{{ $preference->id }}',
+                            redirectMode: 'self',
                         },
-                    }
+                        customization: {
+                            texts: {
+                                action: "pay",
+                                valueProp: 'security_safety',
+                            },
+                        },
+                    },
                 )
             </script>
         </div>

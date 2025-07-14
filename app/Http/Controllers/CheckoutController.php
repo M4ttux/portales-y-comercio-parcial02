@@ -37,6 +37,12 @@ class CheckoutController extends Controller
         MercadoPagoConfig::setAccessToken(config('services.mercadopago.access_token'));
         $client = new PreferenceClient();
 
+        /* $backUrls = [
+            "success" => "http://localhost:8000/checkout/success",
+            "failure" => "http://localhost:8000/checkout/failure",
+            "pending" => "http://localhost:8000/checkout/pending",
+        ]; */
+
         $preference_data = [
             'items' => $items->map(function ($item) {
                 return [
@@ -46,17 +52,22 @@ class CheckoutController extends Controller
                     'currency_id' => 'ARS',
                 ];
             })->toArray(),
-            'back_urls' => [
-                'success' => route('checkout.success'),
-                'failure' => route('checkout.failure'),
-                'pending' => route('checkout.pending'),
+            "back_urls" => [
+                "success" => route("checkout.success"),
+                "failure" => route("checkout.failure"),
+                "pending" => route("checkout.pending"),
             ],
-            /* 'auto_return' => 'approved', */
+
+            "auto_return" => "approved",
         ];
 
         try {
+            
             $preference = $client->create($preference_data);
-            return view('checkout.index', compact('items', 'total', 'preference'));
+
+            $publicKey = config('services.mercadopago.public_key');
+
+            return view('checkout.index', compact('items', 'total', 'preference', 'publicKey'));
         } catch (MPApiException $e) {
             // Mostramos detalles reales del error
             return back()->with('feedback.message', 'Error al generar el botón de pago: ' . json_encode($e->getApiResponse()->getContent()))
@@ -118,5 +129,24 @@ class CheckoutController extends Controller
     public function confirmacion()
     {
         return view('checkout.confirmacion');
+    }
+
+    // Vista de éxito
+    public function success(Request $request)
+    {
+        $payment_id = $request->query('payment_id'); // o $request->get('payment_id')
+        return view('checkout.success', compact('payment_id'));
+    }
+
+    // Vista de error
+    public function failure()
+    {
+        return view('checkout.failure');
+    }
+
+    // Vista de pendiente
+    public function pending()
+    {
+        return view('checkout.pending');
     }
 }

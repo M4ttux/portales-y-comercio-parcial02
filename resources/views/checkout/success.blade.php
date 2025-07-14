@@ -1,6 +1,6 @@
 @extends('layout.app')
 
-@section('title', 'Compra Confirmada')
+@section('title', 'Pago Exitoso')
 
 @section('content')
 <div class="container py-4">
@@ -11,18 +11,21 @@
                     <div class="mb-4">
                         <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
                     </div>
-                    <h2 class="text-success mb-3">¡Compra Confirmada!</h2>
-                    <p class="lead">Tu pedido ha sido procesado exitosamente.</p>
-                    <p>Recibirás un email con los detalles de tu compra.</p>
+                    <h2 class="text-success mb-3">¡Pago Exitoso!</h2>
+                    <p class="lead">Tu pago ha sido procesado correctamente.</p>
+                    
+                    @if($payment_id)
+                        <p><strong>ID de Pago:</strong> {{ $payment_id }}</p>
+                    @endif
                     
                     <div class="mt-4">
                         <a href="{{ route('home') }}" class="btn btn-primary me-2">
                             <i class="fas fa-home me-1"></i>
                             Volver al inicio
                         </a>
-                        <a href="{{ route('perfil.index') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-user me-1"></i>
-                            Ver mis pedidos
+                        <a href="{{ route('checkout.confirmacion') }}" class="btn btn-success">
+                            <i class="fas fa-receipt me-1"></i>
+                            Ver confirmación
                         </a>
                     </div>
                 </div>

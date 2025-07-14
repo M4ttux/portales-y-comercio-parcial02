@@ -1,6 +1,6 @@
 @extends('layout.app')
 
-@section('title', 'Compra Confirmada')
+@section('title', 'Pago Pendiente')
 
 @section('content')
 <div class="container py-4">
@@ -9,11 +9,11 @@
             <div class="card">
                 <div class="card-body text-center">
                     <div class="mb-4">
-                        <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                        <i class="fas fa-clock text-warning" style="font-size: 4rem;"></i>
                     </div>
-                    <h2 class="text-success mb-3">¡Compra Confirmada!</h2>
-                    <p class="lead">Tu pedido ha sido procesado exitosamente.</p>
-                    <p>Recibirás un email con los detalles de tu compra.</p>
+                    <h2 class="text-warning mb-3">Pago Pendiente</h2>
+                    <p class="lead">Tu pago está siendo procesado.</p>
+                    <p>Te notificaremos por email cuando se confirme el pago.</p>
                     
                     <div class="mt-4">
                         <a href="{{ route('home') }}" class="btn btn-primary me-2">
