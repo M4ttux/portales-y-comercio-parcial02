@@ -69,16 +69,19 @@ class MercadoPagoController extends Controller
             }
 
             $user = null;
-            $email = $payment->payer->email ?? null;
-
-            if ($email) {
-                $user = User::where('email', $email)->first();
-                Log::info("🔎 Usuario buscado por email: " . $email);
+            // PRIMERO buscar por metadata.user_id (usuario autenticado)
+            if (isset($payment->metadata->user_id)) {
+                $user = User::find($payment->metadata->user_id);
+                Log::info("🔎 Usuario encontrado por metadata.user_id: " . $payment->metadata->user_id);
             }
 
-            if (!$user && isset($payment->metadata->user_id)) {
-                $user = User::find($payment->metadata->user_id);
-                Log::info("🔎 Usuario buscado por metadata.user_id: " . $payment->metadata->user_id);
+            // SOLO si no se encuentra por metadata, buscar por email como fallback
+            if (!$user) {
+                $email = $payment->payer->email ?? null;
+                if ($email) {
+                    $user = User::where('email', $email)->first();
+                    Log::info("🔎 Usuario buscado por email como fallback: " . $email);
+                }
             }
 
             if (!$user) {
@@ -123,6 +126,14 @@ class MercadoPagoController extends Controller
                 $orden->load('items.articulo', 'usuario');
                 Mail::to($user->email)->send(new ResumenCompra($orden));
                 Log::info("✅ Orden aprobada creada, mail enviado y carrito vaciado para user_id {$user->id}");
+            } elseif (in_array($payment->status, ['pending', 'in_process'])) {
+                $orden->load('items.articulo', 'usuario');
+                Mail::to($user->email)->send(new ResumenCompra($orden));
+                Log::info("🕐 Orden en estado '{$payment->status}' creada y mail enviado para user_id {$user->id}");
+            } elseif (in_array($payment->status, ['rejected', 'cancelled'])) {
+                $orden->load('items.articulo', 'usuario');
+                Mail::to($user->email)->send(new ResumenCompra($orden));
+                Log::info("❌ Orden con error '{$payment->status}' creada y mail enviado para user_id {$user->id}");
             } else {
                 Log::info("🕐 Orden creada en estado '{$payment->status}' para user_id {$user->id}");
             }

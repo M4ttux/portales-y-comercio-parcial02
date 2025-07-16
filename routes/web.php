@@ -113,17 +113,16 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/carrito/{id}', [CarritoController::class, 'update'])->name('carrito.update');
     Route::delete('/carrito/{id}', [CarritoController::class, 'destroy'])->name('carrito.destroy');
 });
-
-// Rutas de checkout (deben estar FUERA del middleware auth para los callbacks)
-Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
-Route::get('/checkout/failure', [CheckoutController::class, 'failure'])->name('checkout.failure');
-Route::get('/checkout/pending', [CheckoutController::class, 'pending'])->name('checkout.pending');
-
 // Rutas protegidas por autenticación
 Route::middleware(['auth'])->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::get('/checkout/confirmacion', [CheckoutController::class, 'confirmacion'])->name('checkout.confirmacion');
 });
+
+// Rutas de checkout (deben estar FUERA del middleware auth para los callbacks)
+Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
+Route::get('/checkout/failure', [CheckoutController::class, 'failure'])->name('checkout.failure');
+Route::get('/checkout/pending', [CheckoutController::class, 'pending'])->name('checkout.pending');
 
 // Webhook para notificaciones de MercadoPago (sin middleware de autenticación)
 Route::post('/mp/webhook', [MercadoPagoController::class, 'webhook'])->name('mp.webhook')->withoutMiddleware([VerifyCsrfToken::class]);

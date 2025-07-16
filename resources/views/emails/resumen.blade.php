@@ -1,4 +1,3 @@
-{{-- resources/views/emails/resumen.blade.php --}}
 @component('mail::message')
 # @switch($orden->estado)
     @case('approved')
@@ -9,6 +8,12 @@
         @break
     @case('in_process')
         Estamos procesando tu pago
+        @break
+    @case('rejected')
+        Pago rechazado
+        @break
+    @case('cancelled')
+        Pago cancelado
         @break
     @default
         Estado de orden: {{ ucfirst($orden->estado) }}
@@ -25,6 +30,12 @@ Hola {{ $orden->usuario->name ?? 'Cliente' }},
         @break
     @case('in_process')
         Estamos verificando tu pago. Te avisaremos una vez finalice el proceso.
+        @break
+    @case('rejected')
+        Lamentablemente tu pago fue rechazado. Puedes intentar nuevamente con otro método de pago.
+        @break
+    @case('cancelled')
+        Tu pago fue cancelado. Si fue un error, puedes intentar realizar la compra nuevamente.
         @break
     @default
         Tu orden está en estado **{{ ucfirst($orden->estado) }}**.
@@ -60,7 +71,7 @@ Hola {{ $orden->usuario->name ?? 'Cliente' }},
     <tfoot>
         <tr>
             <td colspan="2" align="right" style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">
-                Total pagado:
+                Total:
             </td>
             <td align="right" style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">
                 ${{ number_format($orden->total, 2) }}
@@ -73,12 +84,21 @@ Hola {{ $orden->usuario->name ?? 'Cliente' }},
 
 📅 <strong>Fecha de compra:</strong> {{ $orden->fecha_compra->format('d/m/Y H:i') }}
 
-@if (in_array($orden->estado, ['approved', 'pending', 'in_process']))
-    @component('mail::button', ['url' => route('checkout.confirmacion')])
-    Ver estado de mi compra
-    @endcomponent
-@endif
-
+@switch($orden->estado)
+    @case('approved')
+    @case('pending')
+    @case('in_process')
+        @component('mail::button', ['url' => route('perfil.index')])
+        Ver estado de mi compra
+        @endcomponent
+        @break
+    @case('rejected')
+    @case('cancelled')
+        @component('mail::button', ['url' => route('carrito.index')])
+        Intentar compra nuevamente
+        @endcomponent
+        @break
+@endswitch
 
 Gracias por confiar en nosotros.  
 **{{ config('app.name') }}**

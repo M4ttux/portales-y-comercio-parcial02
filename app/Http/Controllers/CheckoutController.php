@@ -55,7 +55,6 @@ class CheckoutController extends Controller
 
             "auto_return" => "approved",
 
-            // ✅ Agregado: asociamos el user_id para identificarlo desde el webhook
             "metadata" => [
                 "user_id" => $user->id
             ]
@@ -77,12 +76,6 @@ class CheckoutController extends Controller
         return redirect()->route('checkout.confirmacion');
     }
 
-    // Vista de confirmación
-    public function confirmacion()
-    {
-        return view('checkout.confirmacion');
-    }
-
     // Vista de éxito
     public function success(Request $request)
     {
@@ -93,6 +86,7 @@ class CheckoutController extends Controller
     // Vista de error
     public function failure()
     {
+        
         return view('checkout.failure');
     }
 

@@ -24,7 +24,7 @@
                             <td>{{ $orden->usuario->name ?? 'Usuario eliminado' }}</td>
                             <td>{{ \Carbon\Carbon::parse($orden->fecha_compra)->format('d/m/Y H:i') }}</td>
                             <td>${{ number_format($orden->total, 2) }}</td>
-                            <td>{{ ucfirst($orden->estado) }}</td>
+                            <td><x-estado-badge :estado="$orden->estado" /></td>
                             <td>
                                 <ul class="list-unstyled mb-0">
                                     @foreach($orden->items as $item)

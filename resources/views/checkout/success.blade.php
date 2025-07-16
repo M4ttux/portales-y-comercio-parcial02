@@ -23,9 +23,9 @@
                             <i class="fas fa-home me-1"></i>
                             Volver al inicio
                         </a>
-                        <a href="{{ route('checkout.confirmacion') }}" class="btn btn-success">
-                            <i class="fas fa-receipt me-1"></i>
-                            Ver confirmación
+                        <a href="{{ route('perfil.index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-user me-1"></i>
+                            Ver mis pedidos
                         </a>
                     </div>
                 </div>

@@ -9,10 +9,10 @@
                 @if ($usuario->ordenes && $usuario->ordenes->count())
                     @foreach ($usuario->ordenes as $orden)
                         <div class="mb-3 border rounded p-3">
-                            <strong>Orden #{{ $orden->id }}</strong><br>
+                            <strong>Orden ID: #{{ $orden->id }}</strong><br>
                             <strong>Fecha:</strong> {{ \Carbon\Carbon::parse($orden->fecha_compra)->format('d/m/Y H:i') }}<br>
                             <strong>Total:</strong> ${{ number_format($orden->total, 2) }}<br>
-                            <strong>Estado:</strong> {{ ucfirst($orden->estado) }}
+                            <strong>Estado:</strong> <x-estado-badge :estado="$orden->estado" />
 
                             <ul class="list-group mt-2">
                                 @foreach ($orden->items as $item)
