@@ -115,8 +115,11 @@ APP_URL=https://123123123123.ngrok-free.app <- Esto es un ejemplo
 ### 🧪 Usuarios de prueba
 El sistema incluye usuarios precreados desde los seeders. Podés iniciar sesión con:
 
+```bash
 Email: admin@admin.com
+
 Contraseña: admin
+```
 
 (Ver UserSeeder.php para más detalles)# river
 # TiendaRiver
