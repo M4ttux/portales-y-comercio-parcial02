@@ -121,5 +121,5 @@ Email: admin@admin.com
 Contraseña: admin
 ```
 
-(Ver UserSeeder.php para más detalles)# river
+(Ver UserSeeder.php para más detalles)
 # TiendaRiver
