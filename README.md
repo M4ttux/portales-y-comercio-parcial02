@@ -33,7 +33,7 @@ https://github.com/M4ttux/portales-y-comercio-parcial02
 
 - Tener instalado **XAMPP** con Apache y MySQL
 - Tener instalado **Composer**
-- Tener activado PHP 8.2 o superior
+- Tener activado PHP 8.2.12
 
 ---
 
@@ -105,15 +105,17 @@ php artisan serve
 ```
 
 ### 🌐 Acceso al sitio
-Para el correcto funcionamiento se recomienda el uso de Ngrok y agregarlo al .env
+Para el correcto funcionamiento, se recomienda el uso de Ngrok y agregarlo al .env
 
-http://localhost:8000
+
+```bash
+APP_URL=https://123123123123.ngrok-free.app <- Esto es un ejemplo
+```
 
 ### 🧪 Usuarios de prueba
 El sistema incluye usuarios precreados desde los seeders. Podés iniciar sesión con:
 
 Email: admin@admin.com
-
 Contraseña: admin
 
 (Ver UserSeeder.php para más detalles)# river
