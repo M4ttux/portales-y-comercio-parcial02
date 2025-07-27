@@ -68,6 +68,8 @@ Route::get('/noticias', [NoticiaController::class, 'index'])->name('noticias.ind
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
     Route::get('/admin/{seccion}', [AdminController::class, 'mostrarSeccion'])->name('admin.section');
+    Route::put('/usuarios/{id}', [AdminController::class, 'update'])->name('usuarios.update');
+    Route::delete('/usuarios/{id}', [AdminController::class, 'destroy'])->name('usuarios.destroy');
 
     Route::delete('/articulos/{id}', [ArticuloController::class, 'destroy'])->name('articulos.destroy');
     Route::put('/articulos/{id}', [ArticuloController::class, 'update'])->name('articulos.update');
@@ -85,8 +87,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/noticias/{id}', [NoticiaController::class, 'update'])->name('noticias.update');
     Route::post('/noticias', [NoticiaController::class, 'store'])->name('noticias.store');
 
-    Route::put('/usuarios/{id}', [UserController::class, 'update'])->name('usuarios.update');
-    Route::delete('/usuarios/{id}', [UserController::class, 'destroy'])->name('usuarios.destroy');
     Route::post('/usuarios', [UserController::class, 'store'])->name('usuarios.store');
 });
 

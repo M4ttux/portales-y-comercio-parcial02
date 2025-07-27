@@ -25,7 +25,7 @@ Se trata de un sitio web dinámico hecho con **Laravel 11**, que simula una tien
 ---
 ## 🗄️ Repositorio en GitHub
 
-https://github.com/M4ttux/portales-y-comercio-parcial01
+https://github.com/M4ttux/portales-y-comercio-parcial02
 
 ## 🧰 Instalación del proyecto
 
@@ -33,7 +33,7 @@ https://github.com/M4ttux/portales-y-comercio-parcial01
 
 - Tener instalado **XAMPP** con Apache y MySQL
 - Tener instalado **Composer**
-- Tener activado PHP 8.1 o superior
+- Tener activado PHP 8.2 o superior
 
 ---
 
@@ -79,28 +79,33 @@ Asegurate de tener una base de datos vacía creada, por ejemplo portales.
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=portales
+DB_DATABASE=tienda
 DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-#### 7. Ejecutá migraciones y seeders
+#### 7. Ejecutá migraciones, seeders y storages
 Esto creará todas las tablas necesarias y poblará datos de prueba:
 
 ```bash
-php artisan migrate --seed
+php artisan migrate
 ```
 
-O, si querés reiniciar todo:
+```bash
+php artisan db:seed
+```
 
 ```bash
-php artisan migrate:fresh --seed
+php artisan storage:link
 ```
 
 #### 8. Iniciá el servidor local
 ```bash
 php artisan serve
 ```
+
+### 🌐 Acceso al sitio
+Para el correcto funcionamiento se recomienda el uso de Ngrok y agregarlo al .env
 
 http://localhost:8000
 
